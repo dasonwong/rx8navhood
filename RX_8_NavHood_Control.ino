@@ -68,13 +68,13 @@ void loop() {
   /*
    * The main function, runs continuously
    */
-  if (digitalRead(ACCPIN) == HIGH) {    // Accessories are on (car on)
-    checkResume();                      // Check if we the car was previously off
-    checkOpenButton();                  // Check if the Open button has been pressed
-    checkTiltButton();                  // Check if the Tilt button has been pressed
+  if (digitalRead(ACCPIN) == HIGH) {                    // Accessories are on (car on)
+    checkResume();                                      // Check if we the car was previously off
+    checkOpenButton();                                  // Check if the Open button has been pressed
+    checkTiltButton();                                  // Check if the Tilt button has been pressed
   }
 
-  if (digitalRead(ACCPIN) == LOW) {     // Accessories are off (car off)
+  if (digitalRead(ACCPIN) == LOW && carOff == false) {  // Accessories are off (car off)
     checkOff();
   }
 }
