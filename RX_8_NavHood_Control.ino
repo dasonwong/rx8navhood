@@ -75,7 +75,11 @@ void loop() {
   }
 
   if (digitalRead(ACCPIN) == LOW && carOff == false) {  // Accessories are off (car off)
-    checkOff();
+    if (carOff == false) {
+      checkOff();
+    }else{
+      checkCarOffTime();
+    }
   }
 }
 
@@ -136,7 +140,7 @@ void checkTiltButton() {
 
 void checkOff() {
   /*
-   * Check if the car is off, close the hood and set a limit on how long to charge the tablet after the car is off
+   * Check if the car is off and closes the hood
    */
   delay(ACCDETECTDELAY);                                          // Wait a ACCDETECTDELAY time
   if (digitalRead(ACCPIN) == LOW) {                               // Check if Accessories is still off
@@ -152,6 +156,20 @@ void checkOff() {
       sleepNow();                                                 // Make Arduino go into sleep mode
     }
   }
+}
+
+void checkCarOffTime() {
+  /*
+   * Check how long the car has been off and puts the Arduino to sleep
+   */
+  carOffTime += 2;                                                // Increment the car off timer (s)
+  if (carOffTime > CAROFFCHARGETIME) {                            // Car has been off for > CAROFFCHARGETIME
+    Serial.println("Entering sleep mode");
+    digitalWrite(CHARGEENABLE, LOW);                              // Stop charging the tablet
+    delay(100);
+    sleepNow();                                                   // Make Arduino go into sleep mode
+  }
+  delay(2000);
 }
 
 void restorePosition() {
@@ -220,4 +238,3 @@ void wakeUp() {
    */
   Serial.println("Resuming from sleep");
 }
-
