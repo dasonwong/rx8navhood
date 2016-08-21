@@ -74,7 +74,7 @@ void loop() {
     checkTiltButton();                                  // Check if the Tilt button has been pressed
   }
 
-  if (digitalRead(ACCPIN) == LOW && carOff == false) {  // Accessories are off (car off)
+  if (digitalRead(ACCPIN) == LOW) {  // Accessories are off (car off)
     if (carOff == false) {
       checkOff();
     }else{
