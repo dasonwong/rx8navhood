@@ -68,13 +68,11 @@ void loop() {
   /*
    * The main function, runs continuously
    */
-  if (digitalRead(ACCPIN) == HIGH) {                    // Accessories are on (car on)
-    checkResume();                                      // Check if we the car was previously off
-    checkOpenButton();                                  // Check if the Open button has been pressed
-    checkTiltButton();                                  // Check if the Tilt button has been pressed
-  }
-
-  if (digitalRead(ACCPIN) == LOW) {  // Accessories are off (car off)
+  if (digitalRead(ACCPIN) == HIGH) {  // Accessories are on (car on)
+    checkResume();                    // Check if we the car was previously off
+    checkOpenButton();                // Check if the Open button has been pressed
+    checkTiltButton();                // Check if the Tilt button has been pressed
+  }else{                              // Accessories are off (car off)
     if (carOff == false) {
       checkOff();
     }else{
@@ -87,12 +85,11 @@ void checkResume() {
   /*
    * Check if we are resuming from a 'carOff' event, restore previous hood position
    */
-  if (carOff == true) {                 // Only run if car was off
-    delay(ACCDETECTDELAY);              // Wait a ACCDETECTDELAY time
+  if (carOff == true) {                  // Only run if car off
+    delay(ACCDETECTDELAY);               // Wait a ACCDETECTDELAY time
     if (digitalRead(ACCPIN) == HIGH) {   // Check to see if Accessories are still on
-      digitalWrite(CHARGEENABLE, HIGH); // Make sure tablet charging is enabled, incase we went to sleep
       if (onHoodStatus == HOODOPENED) {
-        operateHood(OPEN, false);       // Restore the previous hood position
+        operateHood(OPEN, false);        // Restore the previous hood position
         restorePosition();              
       }
       carOff = false;
@@ -154,6 +151,7 @@ void checkOff() {
       digitalWrite(CHARGEENABLE, LOW);                            // Stop charging the tablet
       delay(100);
       sleepNow();                                                 // Make Arduino go into sleep mode
+      digitalWrite(CHARGEENABLE, HIGH);                           // Resume tablet charging
     }
   }
 }
@@ -164,10 +162,9 @@ void checkCarOffTime() {
    */
   carOffTime += 2;                                                // Increment the car off timer (s)
   if (carOffTime > CAROFFCHARGETIME) {                            // Car has been off for > CAROFFCHARGETIME
-    Serial.println("Entering sleep mode");
     digitalWrite(CHARGEENABLE, LOW);                              // Stop charging the tablet
     delay(100);
-    sleepNow();                                                   // Make Arduino go into sleep mode
+    sleepNow();                                                   // Make the Arduino go into sleep mode
   }
   delay(2000);
 }
@@ -197,6 +194,8 @@ void operateHood(bool dir, bool tilt) {
     digitalWrite(MOTORENABLE, LOW);                                   // Stop the motor
   }else{
     if (dir) {                                                        // If direction is OPEN
+      String debugString = "Opening hood, potentiometer: ";
+      Serial.println(debugString + analogRead(A5));
       digitalWrite(MOTORDIR, HIGH);                                   // Set motor drive direction to open
       digitalWrite(MOTORENABLE, HIGH);                                // Enable the motor
       while (analogRead(A5) > HOODOPENEDVALUE && motorRunTime < 20) { // Run until we're fully open. If it's run for over 2s stop
@@ -207,6 +206,8 @@ void operateHood(bool dir, bool tilt) {
       motorRunTime = 0;
       currentHoodStatus = HOODOPENED;
     }else{                                                            // If direction is CLOSE
+      String debugString = "Closing hood, potentiometer: ";
+      Serial.println(debugString + analogRead(A5));
       digitalWrite(MOTORDIR, LOW);                                    // Set motor drive direction to close
       digitalWrite(MOTORENABLE, HIGH);                                // Enable the motor
       while (analogRead(A5) < HOODCLOSEDVALUE && motorRunTime < 20) { // Run until we're fully closed. If it's run for over 2s stop
@@ -224,17 +225,19 @@ void sleepNow() {
   /*
    * Setup an interrupt and enter sleep mode
    */
-  set_sleep_mode(SLEEP_MODE_PWR_DOWN);  // Set type of sleep mode
-  sleep_enable();                       // Enable sleep mode
-  attachInterrupt(0, wakeUp, HIGH);     // Use interrupt 0 (pin 2 ie. ACC input to wake device)
-  sleep_mode();                         // Put device to sleep
-  sleep_disable();                      // Execution resumes from here after waking up
+  Serial.println("Entering sleep mode");
+  sleep_enable();                         // Enable sleep mode
+  attachInterrupt(0, wakeUp, HIGH);       // Use interrupt 0 (pin 2 ie. ACC input to wake device)
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);    // Set type of sleep mode
+  sleep_mode();                           // Put device to sleep
+  sleep_disable();                        // Execution resumes from here after waking up
   detachInterrupt(0);
+  Serial.println("Resuming from sleep");
 }
 
 void wakeUp() {
   /*
    * The wakeUp() interrupt service routine will run when we get input from ACC (pin 2)
+   * Since we just want the device to wake up we do nothing here
    */
-  Serial.println("Resuming from sleep");
 }
