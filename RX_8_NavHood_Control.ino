@@ -22,9 +22,9 @@ const int HOODOPENEDVALUE = 285;    // Analogue potentiometer value when hood is
 const int HOODCLOSEDVALUE = 950;    // Analogue potentiometer value when hood is closed
 const int HOODPOSTOLERANCE = 10;    // Analogue potentiometer value tolerance
 const int TILTDURATION = 15;        // Time (ms) to run the motor for a single hood tilt
-const int BUTTONDELAY = 800;        // Minimum time between button presses
+const int BUTTONDELAY = 400;        // Minimum time between button presses
 const int ACCDETECTDELAY = 2000;    // Time (ms) that ACC needs to be on before car is considered 'on'
-const int CAROFFCHARGETIME = 18000; // Charge tablet when car off duration (s)
+const int CAROFFCHARGETIME = 28800; // Charge tablet when car off duration (s)
 const int MAXTILT = 2;              // Max hood tilt level
 
 // Defining Global Variables
