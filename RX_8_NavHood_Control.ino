@@ -73,10 +73,10 @@ void loop() {
     checkOpenButton();                // Check if the Open button has been pressed
     checkTiltButton();                // Check if the Tilt button has been pressed
   }else{                              // Accessories are off (car off)
-    if (carOff == false) {
-      checkOff();
-    }else{
+    if (carOff) {
       checkCarOffTime();
+    }else{
+      checkOff();
     }
   }
 }
@@ -146,13 +146,6 @@ void checkOff() {
     }
     carOff = true;
     carOffTime += 2;
-    if (carOffTime > CAROFFCHARGETIME) {                          // Car has been off for > CAROFFCHARGETIME
-      Serial.println("Entering sleep mode");
-      digitalWrite(CHARGEENABLE, LOW);                            // Stop charging the tablet
-      delay(100);
-      sleepNow();                                                 // Make Arduino go into sleep mode
-      digitalWrite(CHARGEENABLE, HIGH);                           // Resume tablet charging
-    }
   }
 }
 
@@ -160,13 +153,14 @@ void checkCarOffTime() {
   /*
    * Check how long the car has been off and puts the Arduino to sleep
    */
-  carOffTime += 2;                                                // Increment the car off timer (s)
   if (carOffTime > CAROFFCHARGETIME) {                            // Car has been off for > CAROFFCHARGETIME
     digitalWrite(CHARGEENABLE, LOW);                              // Stop charging the tablet
     delay(100);
     sleepNow();                                                   // Make the Arduino go into sleep mode
+    digitalWrite(CHARGEENABLE, HIGH);                             // Resume tablet charging when we wakeup
   }
   delay(2000);
+  carOffTime += 2;                                                // Increment the car off timer (s)
 }
 
 void restorePosition() {
