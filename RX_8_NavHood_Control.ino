@@ -24,7 +24,7 @@ const int HOODPOSTOLERANCE = 10;    // Analogue potentiometer value tolerance
 const int TILTDURATION = 15;        // Time (ms) to run the motor for a single hood tilt
 const int BUTTONDELAY = 400;        // Minimum time between button presses
 const int ACCDETECTDELAY = 2000;    // Time (ms) that ACC needs to be on before car is considered 'on'
-const int CAROFFCHARGETIME = 28800; // Charge tablet when car off duration (s)
+const int CAROFFCHARGETIME = 43200; // Charge tablet when car off duration (s)
 const int MAXTILT = 2;              // Max hood tilt level
 
 // Defining Global Variables
@@ -220,13 +220,13 @@ void sleepNow() {
    * Setup an interrupt and enter sleep mode
    */
   Serial.println("Entering sleep mode");
-  sleep_enable();                         // Enable sleep mode
-  attachInterrupt(0, wakeUp, HIGH);       // Use interrupt 0 (pin 2 ie. ACC input to wake device)
-  set_sleep_mode(SLEEP_MODE_PWR_DOWN);    // Set type of sleep mode
-  sleep_mode();                           // Put device to sleep
-  sleep_disable();                        // Execution resumes from here after waking up
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);   // Set type of sleep mode
+  sleep_enable();                        // Enable sleep mode
+  attachInterrupt(0, wakeUp, HIGH);      // Use interrupt 0 (pin 2 ie. ACC input to wake device)
+  sleep_mode();                          // Put device to sleep
+  sleep_disable();                       // Execution resumes from here after waking up
   detachInterrupt(0);
-  Serial.println("Resuming from sleep");
+  Serial.println("Resuming from Sleep");
 }
 
 void wakeUp() {
