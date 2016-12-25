@@ -10,21 +10,23 @@ const bool OPEN = true;
 const bool CLOSE = false;
 const bool HOODOPENED = true;
 const bool HOODCLOSED = false;
-const int ACCPIN = 2;               // ACC pin number
-const int MOTORENABLE = 3;          // Motor enable pin number
-const int TILTPIN = 4;              // Tilt button pin number
-const int OPENPIN = 6;              // Open/close button pin number
-const int CHARGEENABLE = 11;        // Charge enable pin number
-const int MOTORDIR = 12;            // Motor direction pin number
-const int CHARGEON = 13;            // Charge on pin number
-const int HOODOPENEDVALUE = 285;    // Analogue potentiometer value when hood is open
-const int HOODCLOSEDVALUE = 950;    // Analogue potentiometer value when hood is closed
-const int HOODPOSTOLERANCE = 10;    // Analogue potentiometer value tolerance
-const int TILTDURATION = 15;        // Time (ms) to run the motor for a single hood tilt
-const int BUTTONDELAY = 400;        // Minimum time between button presses
-const int ACCDETECTDELAY = 2000;    // Time (ms) that ACC needs to be on before car is considered 'on'
-const int CAROFFCHARGETIME = 32400; // Charge tablet when car off duration (s) (max int is 32767)
-const int MAXTILT = 2;              // Max hood tilt level
+const int ACCPIN = 2;                       // ACC pin number
+const int MOTORENABLE = 3;                  // Motor enable pin number
+const int TILTPIN = 4;                      // Tilt button pin number
+const int OPENPIN = 6;                      // Open/close button pin number
+const int CHARGEENABLE = 11;                // Charge enable pin number
+const int MOTORDIR = 12;                    // Motor direction pin number
+const int CHARGEON = 13;                    // Charge on pin number
+const int HOODOPENEDVALUE = 285;            // Analogue potentiometer value when hood is open
+const int HOODCLOSEDVALUE = 950;            // Analogue potentiometer value when hood is closed
+const int HOODPOSTOLERANCE = 10;            // Analogue potentiometer value tolerance
+const int TILTDURATION = 15;                // Time (ms) to run the motor for a single hood tilt
+const int BUTTONDELAY = 400;                // Minimum time between button presses
+const int ACCDETECTDELAY = 2000;            // Time (ms) that ACC needs to be on before car is considered 'on'
+const int CAROFFCHARGETIME = 32400;         // Charge tablet when car off duration (s) (max int is 32767)
+const int MAXTILT = 2;                      // Max hood tilt level
+const unsigned long MAXCHARGEMS = 300000;   // Max charge time between toggle (ms) 300000
+const unsigned long MAXCHARGEOFFMS = 3000;  // Max time to stop charging during toggle (ms)
 
 // Defining Global Variables
 boolean carOff = true;                  // Initialise carOff state
@@ -35,6 +37,9 @@ int tiltButtonState = 0;                // Initialise tiltButtonState
 int tiltLevel = 0;                      // Initialise hood tilt level (0:none - 2:tilted
 int carOffTime = 0;                     // Time since ACC off
 int motorRunTime = 0;                   // Time the motor has run for
+unsigned long chargeOnTime = 0;         // Time the tablet has been charging for
+unsigned long chargeOffTime = 0;        // Time the tablet has not been charging for
+unsigned long onTime;                   // Time since the Ardino has been on
 
 void setup() {
   /*
@@ -57,6 +62,7 @@ void setup() {
   pinMode(CHARGEON, OUTPUT);
   digitalWrite(CHARGEENABLE, HIGH);   // Enable tablet charging
   digitalWrite(CHARGEON, HIGH);       // Start tablet charging
+  chargeOnTime = millis();            // Save the time charging started
   
   // Start serial communication at 9570 bits per second for debugging
   Serial.begin(9570);
@@ -68,7 +74,7 @@ void loop() {
    * The main function, runs continuously
    */
   if (digitalRead(ACCPIN) == HIGH) {  // Accessories are on (car on)
-    checkResume();                    // Check if we the car was previously off
+    checkResume();                    // Check if the car was previously off
     checkOpenButton();                // Check if the Open button has been pressed
     checkTiltButton();                // Check if the Tilt button has been pressed
   }else{                              // Accessories are off (car off)
@@ -78,6 +84,7 @@ void loop() {
       checkOff();
     }
   }
+  keepCharging();                     // Make sure the tablet keeps charging
 }
 
 void checkResume() {
@@ -169,6 +176,24 @@ void restorePosition() {
   for (int i = 0; i < tiltLevel; i++) {   // Tilt to previous desired level if any
     delay(BUTTONDELAY);
     operateHood(CLOSE, true);
+  }
+}
+
+void keepCharging() {
+  /*
+   * Toggle the charging off after charging for MAXCHARGEMS and back on after MAXCHARGEOFFMS
+   * When the tablet or wireless charger gets too hot it stops charging, toggling resumes it
+   */
+  if ((abs(millis() - chargeOnTime) > MAXCHARGEMS) && chargeOffTime == 0) {
+    digitalWrite(CHARGEENABLE, LOW);
+    chargeOffTime = millis();
+    chargeOnTime = 0;
+  }
+
+  if (abs(millis() - chargeOffTime) > MAXCHARGEOFFMS && chargeOnTime == 0) {
+    digitalWrite(CHARGEENABLE, HIGH);
+    chargeOnTime = millis();
+    chargeOffTime = 0;    
   }
 }
 
